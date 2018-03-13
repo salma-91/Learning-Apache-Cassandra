@@ -1,0 +1,63 @@
+//Create Keyspace
+CREATE KEYSPACE testing WITH REPLICATION ={'class': 'SimpleStrategy', 'replication_factor': 1};
+//create table
+CREATE TABLE testing.events(id text PRIMARY KEY, text varchar);
+//use keyspace
+use keyspace testing;      //result:Improper use command.
+//
+set keyspace testing;      //result:SyntaxException: line 1:0 no viable alternative at input 'set' ([set]...)
+//ues keyspace
+use testing;
+//list tables
+describe tables;
+//select from table
+select * from events;
+//insert data into table 
+INSERT INTO events (id, text) VALUES ( '1' , 'first_event' );
+
+
+
+
+// 
+CREATE KEYSPACE test_1 WITH REPLICATION ={'class': 'SimpleStrategy', 'replication_factor': 1};
+//
+use test_1;
+//
+CREATE TABLE timeseries(event_type text, insertion_time timestamp, event varchar, PRIMARY KEY (event_type, insertion_time)) WITH CLUSTERING ORDER BY (insertion_time DESC);
+// 
+INSERT INTO timeseries (event_type, insertion_time, event) values ('buy', toTimestamp(now()),'first_event');
+//
+select * from timeseries;
+ 
+ event_type | insertion_time                  | event
+------------+---------------------------------+-------------
+        buy | 2018-03-13 09:22:08.583000+0000 | first_event
+
+(1 rows)
+
+//
+INSERT INTO timeseries (event_type, insertion_time, event) values ('buy', toTimestamp(now()),'second_event');
+//
+select * from timeseries;
+
+ event_type | insertion_time                  | event
+------------+---------------------------------+--------------
+        buy | 2018-03-13 09:24:22.359000+0000 | second_event
+        buy | 2018-03-13 09:22:08.583000+0000 |  first_event
+
+(2 rows)
+//
+ select * from timeseries order by insertion_time desc;
+//result: InvalidRequest: Error from server: code=2200 [Invalid query] message="ORDER BY is only supported when the partition key is restricted by an EQ or an IN."
+//
+ select * from timeseries where event_type = 'buy' order by insertion_time desc;
+
+ event_type | insertion_time                  | event
+------------+---------------------------------+--------------
+        buy | 2018-03-13 09:24:22.359000+0000 | second_event
+        buy | 2018-03-13 09:22:08.583000+0000 |  first_event
+
+(2 rows)
+
+
+
